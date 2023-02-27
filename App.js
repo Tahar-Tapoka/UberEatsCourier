@@ -1,10 +1,13 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { StatusBar as RNStatusBar } from "react-native";
+import { StyleSheet, View } from "react-native";
+
+import { OrdersScreen } from "./src/screens/Orders.screen";
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <OrdersScreen />
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +16,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 5,
+    backgroundColor: "#fff",
+    marginTop: RNStatusBar.currentHeight,
   },
 });
