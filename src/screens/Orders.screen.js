@@ -45,15 +45,10 @@ export const OrdersScreen = ({ navigation }) => {
   }
   return (
     <View style={styles.container}>
-      <MapView
-        style={{ width, height }}
-        showsUserLocation
-        followsUserLocation
-        initialRegion={{
+      <MapScreen
+        location={{
           latitude: driverLocation.latitude,
           longitude: driverLocation.longitude,
-          latitudeDelta: 0.07,
-          longitudeDelta: 0.07,
         }}
       >
         {orders.map((order) => (
@@ -70,7 +65,7 @@ export const OrdersScreen = ({ navigation }) => {
             </View>
           </Marker>
         ))}
-      </MapView>
+      </MapScreen>
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}

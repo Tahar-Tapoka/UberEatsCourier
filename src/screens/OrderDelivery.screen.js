@@ -18,7 +18,12 @@ export const OrdersDelivery = ({ route }) => {
   ).toFixed(0);
   return (
     <View style={styles.container}>
-      <MapScreen></MapScreen>
+      <MapScreen
+        location={{
+          latitude: order.Restaurant.lat,
+          longitude: order.Restaurant.lng,
+        }}
+      />
       <BottomSheet
         ref={bottomSheetRef}
         index={1}
