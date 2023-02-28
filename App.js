@@ -1,23 +1,27 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { StatusBar as RNStatusBar } from "react-native";
 import { StyleSheet, View } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
 
-import { OrdersScreen } from "./src/screens/Orders.screen";
+import AppNavigator from "./src/navigation/AppNavigator.navigation";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <OrdersScreen />
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <View style={styles.container}>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </View>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 5,
-    backgroundColor: "#fff",
     marginTop: RNStatusBar.currentHeight,
   },
 });

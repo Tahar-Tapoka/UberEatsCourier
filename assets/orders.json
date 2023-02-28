@@ -14,7 +14,7 @@
       "minDeliveryTime": 10,
       "maxDeliveryTime": 44,
       "rating": 1.5095123177204128,
-      "address": "983 Lewis Rapids",
+      "address": "983 Lido, Les Bannanier, Bab Ezzouar - Alger",
       "lat": 46.87190499528364,
       "lng": 28.54937769418778,
       "createdAt": "2022-04-16T12:03:33.225Z",
@@ -22,8 +22,8 @@
     },
     "User": {
       "id": "1",
-      "name": "Vadim",
-      "address": "Abc 1",
+      "name": "Tahar Oka",
+      "address": "Lot 32, Sidi Ali, Akbou - Bejaia",
       "lat": 46.86190499528364,
       "lng": 28.54437769418778
     }
@@ -44,8 +44,8 @@
       "maxDeliveryTime": 44,
       "rating": 1.5095123177204128,
       "address": "983 Lewis Rapids",
-      "lat": 46.87190499528364,
-      "lng": 28.54937769418778,
+      "lat": 46.88190499528364,
+      "lng": 28.64937769418778,
       "createdAt": "2022-04-16T12:03:33.225Z",
       "updatedAt": "2022-04-16T12:05:12.826Z"
     },
@@ -76,8 +76,8 @@
       "maxDeliveryTime": 44,
       "rating": 1.5095123177204128,
       "address": "983 Lewis Rapids",
-      "lat": 46.87190499528364,
-      "lng": 28.54937769418778,
+      "lat": 46.90190499528364,
+      "lng": 28.60937769418778,
       "createdAt": "2022-04-16T12:03:33.225Z",
       "updatedAt": "2022-04-16T12:05:12.826Z"
     },

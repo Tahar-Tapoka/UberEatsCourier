@@ -1,7 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 
-export const DeliveryItem = ({ order }) => {
+export const DeliveryItem = ({ order, navigation }) => {
   return (
     <View style={styles.item}>
       <Image
@@ -19,7 +19,7 @@ export const DeliveryItem = ({ order }) => {
       </View>
       <Pressable
         style={styles.button}
-        onPress={() => console.log("Delevery Accepted")}
+        onPress={() => navigation.navigate("Orders", { order })}
       >
         <Entypo name="check" size={24} color="black" />
       </Pressable>
@@ -31,15 +31,15 @@ const styles = StyleSheet.create({
   item: {
     borderColor: "green",
     borderWidth: 2,
-    borderRadius: 5,
+    borderRadius: 10,
     flexDirection: "row",
     marginVertical: 5,
   },
   image: {
     width: "20%",
     margin: 3,
-    borderBottomLeftRadius: 5,
-    borderTopLeftRadius: 5,
+    borderBottomLeftRadius: 10,
+    borderTopLeftRadius: 10,
   },
   info: {
     marginLeft: 5,
