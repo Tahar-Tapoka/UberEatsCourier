@@ -1,19 +1,10 @@
-import {
-  Alert,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { DeliveryItem } from "../components/DeliveryItem.component";
 import orders from "../../assets/orders.json";
-import { useCallback, useRef, useMemo, useEffect, useState } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { Marker } from "react-native-maps";
 import { Entypo } from "@expo/vector-icons";
-import MapView from "react-native-maps";
 import { MapScreen } from "../components/Map.screen";
 import * as Location from "expo-location";
 import { ActivityIndicator } from "react-native-paper";
@@ -21,7 +12,6 @@ import { ActivityIndicator } from "react-native-paper";
 export const OrdersScreen = ({ navigation }) => {
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
-  const { width, height } = useWindowDimensions();
   const [driverLocation, setDriverLocation] = useState(null);
 
   useEffect(() => {
@@ -38,7 +28,6 @@ export const OrdersScreen = ({ navigation }) => {
       });
     })();
   }, []);
-  console.log(driverLocation);
 
   if (!driverLocation) {
     return <ActivityIndicator animating={true} color="green" />;

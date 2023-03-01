@@ -1,10 +1,11 @@
 import MapView from "react-native-maps";
 import { useWindowDimensions } from "react-native";
 
-export const MapScreen = ({ children, location }) => {
+export const MapScreen = ({ children, location, ref }) => {
   const { width, height } = useWindowDimensions();
   return (
     <MapView
+      ref={ref}
       style={{ width, height }}
       showsUserLocation
       followsUserLocation

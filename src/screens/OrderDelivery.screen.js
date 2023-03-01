@@ -2,31 +2,131 @@ import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { DeliveryItem } from "../components/DeliveryItem.component";
 import orders from "../../assets/orders.json";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Divider } from "react-native-paper";
 import { Fontisto } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { MapScreen } from "../components/Map.screen";
+import * as Location from "expo-location";
+import { ActivityIndicator } from "react-native-paper";
+import { Marker } from "react-native-maps";
+import MapViewDirections from "react-native-maps-directions";
+
+const ORDER_STATUS = {
+  READY_FOR_PICKUP: "READY_FOR_PICKUP",
+  ACCEPTED: "ACCEPTED",
+  PICKED_UP: "PICKED_UP",
+};
 
 export const OrdersDelivery = ({ route }) => {
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [totalMin, setTotalMin] = useState(0);
+  const [totalKm, setTotalKm] = useState(0);
+  const [deliveryStatus, setDeliveryStatus] = useState(
+    ORDER_STATUS.READY_FOR_PICKUP
+  );
+
   const bottomSheetRef = useRef(null);
+  const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
   const { order } = route.params;
-  const time = (
-    (order.Restaurant.minDeliveryTime + order.Restaurant.maxDeliveryTime) /
-    2
-  ).toFixed(0);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Please gtant using location!!");
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync();
+      setDriverLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    })();
+    const forgroundSubscription = Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 200,
+      },
+      (updatedLocation) => {
+        setDriverLocation({
+          latitude: updatedLocation.coords.latitude,
+          longitude: updatedLocation.coords.longitude,
+        });
+      }
+    );
+    return forgroundSubscription;
+  }, []);
+  console.log("heyo ", driverLocation);
+
+  if (!driverLocation) {
+    return <ActivityIndicator animating={true} color="green" />;
+  }
+
+  const onAcceptOrderHandler = () => {
+    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) {
+      bottomSheetRef.current?.collapse();
+      mapRef.current.animateToRegion(
+        {
+          latitude: driverLocation.latitude,
+          longitude: driverLocation.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+      setDeliveryStatus(ORDER_STATUS.ACCEPTED);
+    }
+  };
   return (
     <View style={styles.container}>
       <MapScreen
+        ref={mapRef}
         location={{
-          latitude: order.Restaurant.lat,
-          longitude: order.Restaurant.lng,
+          latitude: driverLocation.latitude,
+          longitude: driverLocation.longitude,
         }}
-      />
+      >
+        <MapViewDirections
+          origin={driverLocation}
+          waypoints={[
+            { latitude: order.Restaurant.lat, longitude: order.Restaurant.lng },
+          ]}
+          destination={{ latitude: order.User.lat, longitude: order.User.lng }}
+          onReady={(resutls) => {
+            setTotalMin(resutls.duration);
+            setTotalKm(resutls.distance);
+          }}
+          apikey="AIzaSyBjR9kWTaRSBCpLSrR3W1txKoViMuJQv3k"
+          strokeWidth={3}
+          strokeColor="#3FC060"
+        />
+        <Marker
+          title={order.Restaurant.name}
+          coordinate={{
+            latitude: order.Restaurant.lat,
+            longitude: order.Restaurant.lng,
+          }}
+        >
+          <View style={styles.marker}>
+            <Entypo name="shop" size={24} color="white" />
+          </View>
+        </Marker>
+        <Marker
+          title={order.User.name}
+          coordinate={{
+            latitude: order.User.lat,
+            longitude: order.User.lng,
+          }}
+        >
+          <View style={styles.marker}>
+            <Entypo name="user" size={24} color="white" />
+          </View>
+        </Marker>
+      </MapScreen>
       <BottomSheet
         ref={bottomSheetRef}
-        index={1}
         snapPoints={snapPoints}
         handleIndicatorStyle={{ backgroundColor: "grey", width: 100 }}
       >
@@ -38,14 +138,14 @@ export const OrdersDelivery = ({ route }) => {
             marginBottom: 15,
           }}
         >
-          <Text style={styles.info}>{time} min</Text>
+          <Text style={styles.info}>{totalMin.toFixed(0)} min</Text>
           <Fontisto
             name="shopping-basket"
             size={24}
             color="green"
             style={{ marginHorizontal: 5 }}
           />
-          <Text style={styles.info}> 3.107Km</Text>
+          <Text style={styles.info}> {totalKm.toFixed(2)} Km</Text>
         </View>
         <View style={styles.contentContainer}>
           <Divider bold />
@@ -80,7 +180,7 @@ export const OrdersDelivery = ({ route }) => {
           buttonColor="green"
           style={styles.button}
           labelStyle={{ fontSize: 20 }}
-          onPress={() => console.log("order Accepted")}
+          onPress={onAcceptOrderHandler}
         >
           Accept Order
         </Button>
@@ -121,5 +221,10 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 24,
     marginBottom: 10,
+  },
+  marker: {
+    backgroundColor: "green",
+    borderRadius: 20,
+    padding: 5,
   },
 });

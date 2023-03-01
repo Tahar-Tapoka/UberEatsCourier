@@ -54,7 +54,7 @@
       "id": "2",
       "name": "Lukas",
       "address": "Lithuania 1",
-      "lat": 36.7867291,
+      "lat": 36.6987291,
       "lng": 3.2083962
     }
   },
@@ -86,7 +86,7 @@
       "id": "3",
       "name": "Alex",
       "address": "Happy land",
-      "lat": 36.8367291,
+      "lat": 36.7367291,
       "lng": 3.2683962
     }
   }
