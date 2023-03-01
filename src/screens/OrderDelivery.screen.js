@@ -25,10 +25,11 @@ const ORDER_STATUS = {
   PICKED_UP: "PICKED_UP",
 };
 
-export const OrdersDelivery = ({ route }) => {
+export const OrdersDelivery = ({ route, navigation }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMin, setTotalMin] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
+  const [isDriverClose, setDriverIsClose] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState(
     ORDER_STATUS.READY_FOR_PICKUP
   );
@@ -37,6 +38,15 @@ export const OrdersDelivery = ({ route }) => {
   const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
   const { order } = route.params;
+
+  const restaurantLocation = {
+    latitude: order.Restaurant.lat,
+    longitude: order.Restaurant.lng,
+  };
+  const deliveryLocation = {
+    latitude: order.User.lat,
+    longitude: order.User.lng,
+  };
 
   useEffect(() => {
     (async () => {
@@ -65,6 +75,7 @@ export const OrdersDelivery = ({ route }) => {
     );
     return forgroundSubscription;
   }, []);
+
   console.log("heyo ", driverLocation);
 
   if (!driverLocation) {
@@ -72,19 +83,34 @@ export const OrdersDelivery = ({ route }) => {
   }
 
   const onAcceptOrderHandler = () => {
+    bottomSheetRef.current?.collapse();
     if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) {
-      bottomSheetRef.current?.collapse();
-      mapRef.current.animateToRegion(
-        {
-          latitude: driverLocation.latitude,
-          longitude: driverLocation.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
+      mapRef.current.animateToRegion({
+        latitude: driverLocation.latitude,
+        longitude: driverLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
       setDeliveryStatus(ORDER_STATUS.ACCEPTED);
     }
+    if (deliveryStatus === ORDER_STATUS.ACCEPTED)
+      setDeliveryStatus(ORDER_STATUS.PICKED_UP);
+    if (deliveryStatus === ORDER_STATUS.PICKED_UP) {
+      console.warn("Delivery Finished");
+      navigation.navigate("Home");
+    }
+  };
+  const renderbuttonTitle = () => {
+    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) return "Accept Order";
+    if (deliveryStatus === ORDER_STATUS.ACCEPTED) return "Pickup Order";
+    if (deliveryStatus === ORDER_STATUS.PICKED_UP) return "Complete Delivery";
+  };
+  const buttonDisabled = () => {
+    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) return false;
+    if (deliveryStatus === ORDER_STATUS.ACCEPTED && isDriverClose) return false;
+    if (deliveryStatus === ORDER_STATUS.PICKED_UP && isDriverClose)
+      return false;
+    return true;
   };
   return (
     <View style={styles.container}>
@@ -102,36 +128,31 @@ export const OrdersDelivery = ({ route }) => {
       >
         <MapViewDirections
           origin={driverLocation}
-          waypoints={[
-            { latitude: order.Restaurant.lat, longitude: order.Restaurant.lng },
-          ]}
-          destination={{ latitude: order.User.lat, longitude: order.User.lng }}
+          waypoints={
+            deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP
+              ? [restaurantLocation]
+              : []
+          }
+          destination={
+            deliveryStatus === ORDER_STATUS.ACCEPTED
+              ? restaurantLocation
+              : deliveryLocation
+          }
           onReady={(resutls) => {
             setTotalMin(resutls.duration);
             setTotalKm(resutls.distance);
+            setDriverIsClose(resutls.distance <= 0.1);
           }}
           apikey="AIzaSyBjR9kWTaRSBCpLSrR3W1txKoViMuJQv3k"
           strokeWidth={3}
           strokeColor="#3FC060"
         />
-        <Marker
-          title={order.Restaurant.name}
-          coordinate={{
-            latitude: order.Restaurant.lat,
-            longitude: order.Restaurant.lng,
-          }}
-        >
+        <Marker title={order.Restaurant.name} coordinate={restaurantLocation}>
           <View style={styles.marker}>
             <Entypo name="shop" size={24} color="white" />
           </View>
         </Marker>
-        <Marker
-          title={order.User.name}
-          coordinate={{
-            latitude: order.User.lat,
-            longitude: order.User.lng,
-          }}
-        >
+        <Marker title={order.User.name} coordinate={deliveryLocation}>
           <View style={styles.marker}>
             <Entypo name="user" size={24} color="white" />
           </View>
@@ -193,8 +214,9 @@ export const OrdersDelivery = ({ route }) => {
           style={styles.button}
           labelStyle={{ fontSize: 20 }}
           onPress={onAcceptOrderHandler}
+          disabled={buttonDisabled()}
         >
-          Accept Order
+          {renderbuttonTitle()}
         </Button>
       </BottomSheet>
     </View>
