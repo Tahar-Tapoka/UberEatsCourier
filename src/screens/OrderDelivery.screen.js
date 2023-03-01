@@ -1,4 +1,11 @@
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { DeliveryItem } from "../components/DeliveryItem.component";
 import orders from "../../assets/orders.json";
@@ -9,7 +16,7 @@ import { Entypo } from "@expo/vector-icons";
 import { MapScreen } from "../components/Map.screen";
 import * as Location from "expo-location";
 import { ActivityIndicator } from "react-native-paper";
-import { Marker } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 const ORDER_STATUS = {
@@ -25,7 +32,7 @@ export const OrdersDelivery = ({ route }) => {
   const [deliveryStatus, setDeliveryStatus] = useState(
     ORDER_STATUS.READY_FOR_PICKUP
   );
-
+  const { width, height } = useWindowDimensions();
   const bottomSheetRef = useRef(null);
   const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
@@ -81,11 +88,16 @@ export const OrdersDelivery = ({ route }) => {
   };
   return (
     <View style={styles.container}>
-      <MapScreen
+      <MapView
         ref={mapRef}
-        location={{
+        style={{ width, height }}
+        showsUserLocation
+        followsUserLocation
+        initialRegion={{
           latitude: driverLocation.latitude,
           longitude: driverLocation.longitude,
+          latitudeDelta: 0.08,
+          longitudeDelta: 0.08,
         }}
       >
         <MapViewDirections
@@ -124,7 +136,7 @@ export const OrdersDelivery = ({ route }) => {
             <Entypo name="user" size={24} color="white" />
           </View>
         </Marker>
-      </MapScreen>
+      </MapView>
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
