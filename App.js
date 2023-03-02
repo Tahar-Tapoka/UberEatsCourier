@@ -3,10 +3,15 @@ import { StatusBar } from "expo-status-bar";
 import { StatusBar as RNStatusBar } from "react-native";
 import { StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
+import { Amplify } from "aws-amplify";
 
 import AppNavigator from "./src/navigation/AppNavigator.navigation";
+import awsconfig from "./src/aws-exports";
+import { withAuthenticator } from "@aws-amplify/ui-react";
 
-export default function App() {
+Amplify.configure({ ...awsconfig, Analitics: { disabled: true } });
+
+function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
@@ -25,3 +30,5 @@ const styles = StyleSheet.create({
     marginTop: RNStatusBar.currentHeight,
   },
 });
+
+export default withAuthenticator(App);
