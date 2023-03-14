@@ -10,6 +10,7 @@ import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { OrderDish } from "../models";
 import { DataStore } from "aws-amplify";
+import { useOrderContext } from "../contexts/OrderContext";
 
 const ORDER_STATUS = {
   READY_FOR_PICKUP: "READY_FOR_PICKUP",
@@ -31,6 +32,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
   const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
   const { order, user } = route.params;
+  const { onAcceptOrder } = useOrderContext();
 
   const restaurantLocation = {
     latitude: order.Restaurant._j.lat,
@@ -99,6 +101,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
         longitudeDelta: 0.01,
       });
       setDeliveryStatus(ORDER_STATUS.ACCEPTED);
+      onAcceptOrder(order);
     }
     if (deliveryStatus === ORDER_STATUS.ACCEPTED)
       setDeliveryStatus(ORDER_STATUS.PICKED_UP);

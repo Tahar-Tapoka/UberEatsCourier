@@ -917,7 +917,8 @@ export const schema = {
                 "COOKING",
                 "READY_FOR_PICKUP",
                 "PICKED_UP",
-                "COMPLETED"
+                "COMPLETED",
+                "ACCEPTED"
             ]
         }
     },

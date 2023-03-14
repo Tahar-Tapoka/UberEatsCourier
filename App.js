@@ -10,7 +10,7 @@ import awsconfig from "./src/aws-exports";
 
 import AppNavigator from "./src/navigation/AppNavigator.navigation";
 import { AuthContextProvider } from "./src/contexts/AuthContext";
-import Profile from "./src/screens/Profile.screen";
+import { OrderContextProvider } from "./src/contexts/OrderContext";
 
 Amplify.configure({ ...awsconfig, Analytics: { disabled: true } });
 
@@ -20,7 +20,9 @@ function App() {
       <NavigationContainer>
         <View style={styles.container}>
           <AuthContextProvider>
-            <AppNavigator />
+            <OrderContextProvider>
+              <AppNavigator />
+            </OrderContextProvider>
           </AuthContextProvider>
           <StatusBar style="auto" />
         </View>
