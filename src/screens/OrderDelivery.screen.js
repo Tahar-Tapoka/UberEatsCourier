@@ -1,23 +1,15 @@
-import {
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import BottomSheet from "@gorhom/bottom-sheet";
-import { DeliveryItem } from "../components/DeliveryItem.component";
-import orders from "../../assets/orders.json";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Divider } from "react-native-paper";
 import { Fontisto } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
-import { MapScreen } from "../components/Map.screen";
 import * as Location from "expo-location";
 import { ActivityIndicator } from "react-native-paper";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+import { OrderDish } from "../models";
+import { DataStore } from "aws-amplify";
 
 const ORDER_STATUS = {
   READY_FOR_PICKUP: "READY_FOR_PICKUP",
@@ -33,26 +25,27 @@ export const OrdersDelivery = ({ route, navigation }) => {
   const [deliveryStatus, setDeliveryStatus] = useState(
     ORDER_STATUS.READY_FOR_PICKUP
   );
+  const [orderDish, setOrderDish] = useState();
   const { width, height } = useWindowDimensions();
   const bottomSheetRef = useRef(null);
   const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
-  const { order } = route.params;
+  const { order, user } = route.params;
 
   const restaurantLocation = {
-    latitude: order.Restaurant.lat,
-    longitude: order.Restaurant.lng,
+    latitude: order.Restaurant._j.lat,
+    longitude: order.Restaurant._j.lng,
   };
   const deliveryLocation = {
-    latitude: order.User.lat,
-    longitude: order.User.lng,
+    latitude: user.lat,
+    longitude: user.lng,
   };
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Please gtant using location!!");
+        Alert.alert("Please grant using location!!");
         return;
       }
       let location = await Location.getCurrentPositionAsync();
@@ -76,10 +69,24 @@ export const OrdersDelivery = ({ route, navigation }) => {
     return forgroundSubscription;
   }, []);
 
-  console.log("heyo ", driverLocation);
+  useEffect(() => {
+    if (order) {
+      DataStore.query(OrderDish, (od) => od.orderID.eq(order.id)).then(
+        setOrderDish
+      );
+    }
+  }, [order]);
+  if (orderDish) console.log("User order  dish ", orderDish[0]?.Dish?._j?.name);
 
-  if (!driverLocation) {
-    return <ActivityIndicator animating={true} color="green" />;
+  if (!driverLocation || !user || !order) {
+    return (
+      <ActivityIndicator
+        animating={true}
+        color="green"
+        size={"large"}
+        style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+      />
+    );
   }
 
   const onAcceptOrderHandler = () => {
@@ -147,12 +154,15 @@ export const OrdersDelivery = ({ route, navigation }) => {
           strokeWidth={3}
           strokeColor="#3FC060"
         />
-        <Marker title={order.Restaurant.name} coordinate={restaurantLocation}>
+        <Marker
+          title={order.Restaurant._j.name}
+          coordinate={restaurantLocation}
+        >
           <View style={styles.marker}>
             <Entypo name="shop" size={24} color="white" />
           </View>
         </Marker>
-        <Marker title={order.User.name} coordinate={deliveryLocation}>
+        <Marker title={user.name} coordinate={deliveryLocation}>
           <View style={styles.marker}>
             <Entypo name="user" size={24} color="white" />
           </View>
@@ -183,7 +193,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
         <View style={styles.contentContainer}>
           <Divider bold />
           <Divider bold />
-          <Text style={styles.title}>{order.Restaurant.name}</Text>
+          <Text style={styles.title}>{order.Restaurant._j.name}</Text>
           <View style={styles.row}>
             <Fontisto
               name="shopping-store"
@@ -191,7 +201,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
               color="grey"
               style={{ marginRight: 10 }}
             />
-            <Text style={styles.address}>{order.Restaurant.address}</Text>
+            <Text style={styles.address}>{order.Restaurant._j.address}</Text>
           </View>
           <View style={styles.row}>
             <Entypo
@@ -200,13 +210,20 @@ export const OrdersDelivery = ({ route, navigation }) => {
               color="grey"
               style={{ marginRight: 10 }}
             />
-            <Text style={styles.address}>{order.User.address}</Text>
+            <Text style={styles.address}>{user.address}</Text>
           </View>
           <Divider bold />
-          <Text style={styles.details}>Onion Rings x1</Text>
-          <Text style={styles.details}>Big Mac x3</Text>
-          <Text style={styles.details}>Big Tasty x1</Text>
-          <Text style={styles.details}>Coca-Cola x4</Text>
+          {orderDish?.map((item) => (
+            <Text style={styles.details} key={item.id}>
+              {item.Dish?._j?.name} x {item.quantity}
+            </Text>
+          ))}
+          {/* <BottomSheetFlatList
+            data={orderDish}
+            renderItem={({ item }) => (
+              <Text style={styles.details} key={item.id}>{item.Dish?._j?.name} x {item.quantity}</Text>
+            )}
+          /> */}
         </View>
         <Button
           mode="contained"

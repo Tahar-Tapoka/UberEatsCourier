@@ -1,25 +1,33 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Entypo } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import { DataStore } from "aws-amplify";
+import { OrderDish, User } from "../models";
 
 export const DeliveryItem = ({ order, navigation }) => {
+  const [user, setUser] = useState();
+
+  useEffect(() => {
+    if (order) DataStore.query(User, order.userID).then(setUser);
+  }, [order]);
   return (
     <View style={styles.item}>
       <Image
         source={{
-          uri: order.Restaurant.image,
+          uri: order.Restaurant._j?.image,
         }}
         style={styles.image}
       />
       <View style={styles.info}>
-        <Text style={styles.title}>{order.Restaurant.name}</Text>
-        <Text style={styles.description}>{order.Restaurant.address}</Text>
+        <Text style={styles.title}>{order.Restaurant._j?.name}</Text>
+        <Text style={styles.description}>{order.Restaurant._j?.address}</Text>
         <Text style={styles.subtitle}>Delevery Details:</Text>
-        <Text style={styles.description}>{order.User.name}</Text>
-        <Text style={styles.description}>{order.User.address}</Text>
+        <Text style={styles.description}>{user?.name}</Text>
+        <Text style={styles.description}>{user?.address}</Text>
       </View>
       <Pressable
         style={styles.button}
-        onPress={() => navigation.navigate("Orders", { order })}
+        onPress={() => navigation.navigate("Orders", { order, user })}
       >
         <Entypo name="check" size={24} color="black" />
       </Pressable>

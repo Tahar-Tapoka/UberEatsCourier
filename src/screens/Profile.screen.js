@@ -53,7 +53,6 @@ export const Profile = ({ navigation }) => {
       Alert.alert("Error: ", e.message);
     }
   };
-  console.log("dbc: ", dbCourier);
 
   const updateUser = async () => {
     try {
@@ -82,11 +81,13 @@ export const Profile = ({ navigation }) => {
         placeholder="Name"
         style={styles.input}
       />
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text style={{ marginLeft: 20 }}>Transportation Modes:</Text>
         <Pressable
           onPress={() => setTransportationMode(TransportationModes.DRIVING)}
           style={{
             ...styles.icon,
+            marginLeft: "auto",
             backgroundColor:
               transportationMode === TransportationModes.DRIVING
                 ? "#3FC060"
@@ -109,11 +110,10 @@ export const Profile = ({ navigation }) => {
         </Pressable>
       </View>
 
-      <Button mode="contained" onPress={onSave}>
+      <Button mode="contained" onPress={onSave} style={{ marginTop: "auto" }}>
         {!dbCourier ? "Save" : "Update"}
       </Button>
-      <Divider />
-      <Button mode="contained" onPress={signOut}>
+      <Button mode="contained" onPress={signOut} style={{ marginVertical: 20 }}>
         Sign Out
       </Button>
     </View>
