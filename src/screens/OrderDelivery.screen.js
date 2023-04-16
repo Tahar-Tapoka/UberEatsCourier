@@ -1,5 +1,5 @@
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Divider } from "react-native-paper";
 import { Fontisto } from "@expo/vector-icons";
@@ -8,40 +8,45 @@ import * as Location from "expo-location";
 import { ActivityIndicator } from "react-native-paper";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { OrderDish } from "../models";
-import { DataStore } from "aws-amplify";
 import { useOrderContext } from "../contexts/OrderContext";
-
-const ORDER_STATUS = {
-  READY_FOR_PICKUP: "READY_FOR_PICKUP",
-  ACCEPTED: "ACCEPTED",
-  PICKED_UP: "PICKED_UP",
-};
 
 export const OrdersDelivery = ({ route, navigation }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMin, setTotalMin] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
   const [isDriverClose, setDriverIsClose] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState(
-    ORDER_STATUS.READY_FOR_PICKUP
-  );
-  const [orderDish, setOrderDish] = useState();
   const { width, height } = useWindowDimensions();
   const bottomSheetRef = useRef(null);
   const mapRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
-  const { order, user } = route.params;
-  const { onAcceptOrder } = useOrderContext();
+  const { orderId } = route.params;
+  const {
+    onAcceptOrder,
+    completeOrder,
+    pickUpOrder,
+    fetchOrder,
+    order,
+    user,
+    dishes,
+  } = useOrderContext();
 
   const restaurantLocation = {
-    latitude: order.Restaurant._j.lat,
-    longitude: order.Restaurant._j.lng,
+    latitude: order?.Restaurant?._j?.lat,
+    longitude: order?.Restaurant?._j?.lng,
   };
   const deliveryLocation = {
-    latitude: user.lat,
-    longitude: user.lng,
+    latitude: user?.lat,
+    longitude: user?.lng,
   };
+
+  console.log("drLoc", driverLocation, " rstLoc :", restaurantLocation);
+
+  useEffect(() => {
+    fetchOrder(orderId);
+  }, [orderId]);
+  console.log("Restaurant :", order?.Restaurant);
+  console.log("user :", user);
+  console.log("dishes :", dishes);
 
   useEffect(() => {
     (async () => {
@@ -71,16 +76,9 @@ export const OrdersDelivery = ({ route, navigation }) => {
     return forgroundSubscription;
   }, []);
 
-  useEffect(() => {
-    if (order) {
-      DataStore.query(OrderDish, (od) => od.orderID.eq(order.id)).then(
-        setOrderDish
-      );
-    }
-  }, [order]);
-  if (orderDish) console.log("User order  dish ", orderDish[0]?.Dish?._j?.name);
+  if (dishes) console.log("User order  dish ", dishes[0]?.Dish?._j?.name);
 
-  if (!driverLocation || !user || !order) {
+  if (!driverLocation || !order || !user || !dishes) {
     return (
       <ActivityIndicator
         animating={true}
@@ -91,35 +89,35 @@ export const OrdersDelivery = ({ route, navigation }) => {
     );
   }
 
-  const onAcceptOrderHandler = () => {
+  const onAcceptOrderHandler = async () => {
     bottomSheetRef.current?.collapse();
-    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) {
+    if (order?.status === "READY_FOR_PICKUP") {
       mapRef.current.animateToRegion({
         latitude: driverLocation.latitude,
         longitude: driverLocation.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
-      setDeliveryStatus(ORDER_STATUS.ACCEPTED);
-      onAcceptOrder(order);
+      onAcceptOrder();
     }
-    if (deliveryStatus === ORDER_STATUS.ACCEPTED)
-      setDeliveryStatus(ORDER_STATUS.PICKED_UP);
-    if (deliveryStatus === ORDER_STATUS.PICKED_UP) {
-      console.warn("Delivery Finished");
+    if (order?.status === "ACCEPTED") {
+      pickUpOrder();
+    }
+    if (order?.status === "PICKED_UP") {
+      await completeOrder();
       navigation.navigate("Home");
     }
   };
+
   const renderbuttonTitle = () => {
-    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) return "Accept Order";
-    if (deliveryStatus === ORDER_STATUS.ACCEPTED) return "Pickup Order";
-    if (deliveryStatus === ORDER_STATUS.PICKED_UP) return "Complete Delivery";
+    if (order?.status === "READY_FOR_PICKUP") return "Accept Order";
+    if (order?.status === "ACCEPTED") return "Pickup Order";
+    if (order?.status === "PICKED_UP") return "Complete Delivery";
   };
   const buttonDisabled = () => {
-    if (deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP) return false;
-    if (deliveryStatus === ORDER_STATUS.ACCEPTED && isDriverClose) return false;
-    if (deliveryStatus === ORDER_STATUS.PICKED_UP && isDriverClose)
-      return false;
+    if (order?.status === "READY_FOR_PICKUP") return false;
+    if (order?.status === "ACCEPTED" && isDriverClose) return false;
+    if (order?.status === "PICKED_UP" && isDriverClose) return false;
     return true;
   };
   return (
@@ -139,14 +137,10 @@ export const OrdersDelivery = ({ route, navigation }) => {
         <MapViewDirections
           origin={driverLocation}
           waypoints={
-            deliveryStatus === ORDER_STATUS.READY_FOR_PICKUP
-              ? [restaurantLocation]
-              : []
+            order?.status === "READY_FOR_PICKUP" ? [restaurantLocation] : []
           }
           destination={
-            deliveryStatus === ORDER_STATUS.ACCEPTED
-              ? restaurantLocation
-              : deliveryLocation
+            order?.status === "ACCEPTED" ? restaurantLocation : deliveryLocation
           }
           onReady={(resutls) => {
             setTotalMin(resutls.duration);
@@ -158,14 +152,14 @@ export const OrdersDelivery = ({ route, navigation }) => {
           strokeColor="#3FC060"
         />
         <Marker
-          title={order.Restaurant._j.name}
+          title={order?.Restaurant._j?.name}
           coordinate={restaurantLocation}
         >
           <View style={styles.marker}>
             <Entypo name="shop" size={24} color="white" />
           </View>
         </Marker>
-        <Marker title={user.name} coordinate={deliveryLocation}>
+        <Marker title={user?.name} coordinate={deliveryLocation}>
           <View style={styles.marker}>
             <Entypo name="user" size={24} color="white" />
           </View>
@@ -196,7 +190,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
         <View style={styles.contentContainer}>
           <Divider bold />
           <Divider bold />
-          <Text style={styles.title}>{order.Restaurant._j.name}</Text>
+          <Text style={styles.title}>{order?.Restaurant._j?.name}</Text>
           <View style={styles.row}>
             <Fontisto
               name="shopping-store"
@@ -204,7 +198,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
               color="grey"
               style={{ marginRight: 10 }}
             />
-            <Text style={styles.address}>{order.Restaurant._j.address}</Text>
+            <Text style={styles.address}>{order?.Restaurant._j?.address}</Text>
           </View>
           <View style={styles.row}>
             <Entypo
@@ -213,20 +207,14 @@ export const OrdersDelivery = ({ route, navigation }) => {
               color="grey"
               style={{ marginRight: 10 }}
             />
-            <Text style={styles.address}>{user.address}</Text>
+            <Text style={styles.address}>{user?.address}</Text>
           </View>
           <Divider bold />
-          {orderDish?.map((item) => (
+          {dishes?.map((item) => (
             <Text style={styles.details} key={item.id}>
               {item.Dish?._j?.name} x {item.quantity}
             </Text>
           ))}
-          {/* <BottomSheetFlatList
-            data={orderDish}
-            renderItem={({ item }) => (
-              <Text style={styles.details} key={item.id}>{item.Dish?._j?.name} x {item.quantity}</Text>
-            )}
-          /> */}
         </View>
         <Button
           mode="contained"

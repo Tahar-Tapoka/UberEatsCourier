@@ -2,7 +2,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { DataStore } from "aws-amplify";
-import { OrderDish, User } from "../models";
+import { User } from "../models";
 
 export const DeliveryItem = ({ order, navigation }) => {
   const [user, setUser] = useState();
@@ -27,7 +27,9 @@ export const DeliveryItem = ({ order, navigation }) => {
       </View>
       <Pressable
         style={styles.button}
-        onPress={() => navigation.navigate("Orders", { order, user })}
+        onPress={() =>
+          navigation.navigate("Orders", { orderId: order.id, user })
+        }
       >
         <Entypo name="check" size={24} color="black" />
       </Pressable>

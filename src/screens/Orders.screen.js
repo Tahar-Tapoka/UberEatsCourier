@@ -1,4 +1,4 @@
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { DeliveryItem } from "../components/DeliveryItem.component";
 import { useRef, useMemo, useEffect, useState } from "react";
