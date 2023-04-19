@@ -9,6 +9,7 @@ import { ActivityIndicator } from "react-native-paper";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useOrderContext } from "../contexts/OrderContext";
+import { API_KEY } from "../../.googleApiKey";
 
 export const OrdersDelivery = ({ route, navigation }) => {
   const [driverLocation, setDriverLocation] = useState(null);
@@ -147,7 +148,7 @@ export const OrdersDelivery = ({ route, navigation }) => {
             setTotalKm(resutls.distance);
             setDriverIsClose(resutls.distance <= 0.1);
           }}
-          apikey="AIzaSyBjR9kWTaRSBCpLSrR3W1txKoViMuJQv3k"
+          apikey={API_KEY}
           strokeWidth={3}
           strokeColor="#3FC060"
         />
